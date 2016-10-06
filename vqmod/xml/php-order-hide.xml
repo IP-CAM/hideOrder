@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<modification>
+    <id>PHP Chart</id>
+    <version>1.0.0</version>
+    <vqmver>2.4.1</vqmver>
+    <author><![CDATA[http://4techs.net]]></author>
+
+
+
+
+    <file name="admin/controller/sale/order.php">
+        <operation>
+            <search position="before" index="1" error="log"><![CDATA[public function createInvoiceNo() {]]></search>
+
+            <add><![CDATA[
+
+
+	  public function hideOrder() {
+
+        $order_id = $this->request->get['order_id'];
+
+         $sql="UPDATE `". DB_PREFIX ."order` SET `hide` = !`hide`  WHERE `" . DB_PREFIX . "order`.`order_id` = '" . (int)$order_id . "'";
+
+
+        $query = $this->db->query($sql);
+
+        echo json_encode($query);
+
+    }
+
+			]]></add>
+
+        </operation>
+    </file>
+
+
+
+
+    <file name="admin/model/sale/order_total_filter.php">
+        <operation>
+            <search position="before" index="1" error="log"><![CDATA[ public function getPaymentMethods()]]></search>
+
+            <add><![CDATA[
+
+
+
+    // PHP0
+
+
+    public function isHide()
+{
+
+
+    if (isset($_COOKIE['isHide'])) {
+
+        if ($_COOKIE['isHide'] == 'true') {
+            return ' AND hide=1';
+        }
+        else {
+            return '';
+        }
+    } else {
+
+        return '';
+    }
+
+}
+
+
+
+			]]></add>
+
+        </operation>
+
+
+
+        <operation>
+            <search position="replace" offset="10"><![CDATA[      $sql = 'SELECT o.currency_code, o.currency_value, ' . $select_sql . " FROM `" . DB_PREFIX . "order` o ";]]></search>
+
+
+            <add><![CDATA[
+
+$sql = 'SELECT o.currency_code, o.currency_value, ' . $select_sql . " FROM `" . DB_PREFIX . "order` o ";
+
+    if( !empty( $join ) ){
+          $sql .= implode('',$join);
+      }
+
+
+   if (!empty($where)) {
+             $sql .= " WHERE " . $where . $this->isHide();
+
+            }
+
+
+			]]></add>
+
+        </operation>
+
+
+
+
+
+    </file>
+
+
+
+
+
+
+
+    <file name="admin/view/template/sale/order_list_total_filter.tpl">
+        <operation error="skip">
+            <search position="before" index="1" error="log"><![CDATA[function filter() {]]></search>
+            <add><![CDATA[
+
+            $(document).ready(function() {
+
+                    if($.cookie("isHide")=='true'){
+                    $('#isHide').toggleClass("btn btn-danger btn btn-success");
+                   $('#isHide').html('ايقاف الفلترة');
+                    }
+                    else{
+                     $('#isHide').toggleClass("btn-success btn btn-danger");
+
+                        $('#isHide').html('تفعيل الفلترة');
+                     }
+                      console.log($.cookie("isHide"));
+             });
+
+
+ function hideOrder(id){
+
+
+  $.ajax({
+    url: '<?php echo $store; ?>admin/index.php?route=sale/order/hideOrder&token=<?php echo $token; ?>&order_id=' + id,
+    dataType: 'json',
+    crossDomain: true,
+    beforeSend: function() {
+//      $(node).button('loading');
+    },
+    complete: function(json) {
+//      $(node).button('reset');
+      $('#content > .container-fluid').prepend('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + json['error'] + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+
+    },
+    success: function(json) {
+      $('.alert').remove();
+
+      if (json['error']) {
+        $('#content > .container-fluid').prepend('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + json['error'] + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+      }
+
+      if (json['success']) {
+        $('#content > .container-fluid').prepend('<div class="alert alert-success"><i class="fa fa-check-circle"></i> ' + json['success'] + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+      }
+    },
+    error: function(xhr, ajaxOptions, thrownError) {
+      alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+    }
+  });
+
+
+
+}
+
+
+
+function setStatUsHide() {
+  if($.cookie("isHide")=='true'){
+    $('#isHide').toggleClass("btn btn-success btn btn-danger");
+    $.cookie("isHide",'false');
+    $('#isHide').html('تفعيل الفلترة');
+
+  }
+  else{
+     $('#isHide').toggleClass("btn btn-danger btn btn-success");
+     $.cookie("isHide",'true');
+      $('#isHide').html('ايقاف الفلترة');
+
+  }
+
+
+    console.log($.cookie("isHide"));
+}
+
+
+
+        ]]></add>
+        </operation>
+
+
+
+        <operation error="skip">
+            <search position="after" regex="true"><![CDATA[<td class="text-center">]]></search>
+
+
+            <add><![CDATA[
+
+                    <a href="javascript:hideOrder(<?php echo $order['order_id']; ?>);" data-toggle="tooltip" title="<?php echo $button_view; ?>" class="btn btn-info"><i class="fa fa-file-archive-o"></i></a>
+        ]]></add>
+        </operation>
+
+
+         <operation error="skip">
+            <search position="before" index="1" error="log"><![CDATA[<li class="dropdown"><span data-toggle="tooltip" title="<?php echo $button_settings; ?>"]]></search>
+
+
+            <add><![CDATA[
+
+            <button onclick="setStatUsHide();" id="isHide" class="btn btn-primary" type="button">فلترة</button>
+
+            ]]></add>
+        </operation>
+
+
+
+         <operation error="skip">
+            <search position="before" index="1" error="log"><![CDATA[<script src="view/javascript/jquery/datetimepicker/bootstrap-datetimepicker.min.js" type="text/javascript"></script>]]></search>
+
+
+            <add><![CDATA[
+
+            <script src="view/javascript/jquery/jquery.cookie.js" type="text/javascript"></script>
+
+            ]]></add>
+        </operation>
+
+
+
+
+
+
+
+    </file>
+
+
+
+
+
+
+</modification>
