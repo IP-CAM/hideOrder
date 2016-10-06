@@ -54,7 +54,7 @@
     if (isset($_COOKIE['isHide'])) {
 
         if ($_COOKIE['isHide'] == 'true') {
-            return ' AND hide=1';
+            return ' AND hide=0';
         }
         else {
             return '';
