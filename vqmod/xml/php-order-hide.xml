@@ -175,12 +175,27 @@ $sql = 'SELECT o.currency_code, o.currency_value, ' . $select_sql . " FROM `" . 
 
                       $('input[name="hideOrderByID-checkbox"]').on('switchChange.bootstrapSwitch', function(event, state) {
                           var id=$(this).attr('orderID');
+                          var parentTD = $(this).closest('tr');
+
+
+
+
+
+
+
 
                             $.ajax({
                                 url: '<?php echo $store; ?>admin/index.php?route=sale/order/hideOrder&token=<?php echo $token; ?>&order_id=' + id+'&status='+state,
                                 dataType: 'json',
                                 crossDomain: true,
                                 success: function(json) {
+                                //parentTD.hide();
+                                console.log(parentTD);
+                                parentTD.toggle( "highlight" );
+                                      parentTD.fadeOut( "slow", function() {
+                                                        // Animation complete.
+
+                                });
 
                                 }
                               });
