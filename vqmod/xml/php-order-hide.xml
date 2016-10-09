@@ -18,15 +18,21 @@
 	  public function hideOrder() {
 
         $order_id = $this->request->get['order_id'];
+        $status = $this->request->get['status'];
 
-         $sql="UPDATE `". DB_PREFIX ."order` SET `hide` = !`hide`  WHERE `" . DB_PREFIX . "order`.`order_id` = '" . (int)$order_id . "'";
+        $statusArry=array('true'=>1,'false'=>0);
+
+        $sql="UPDATE `". DB_PREFIX ."order` SET `hide` = '".$statusArry[$status]."'  WHERE `" . DB_PREFIX . "order`.`order_id` = '" . (int)$order_id . "'";
 
 
         $query = $this->db->query($sql);
 
-        echo json_encode(array('succ'=>$query));
+        echo json_encode(array('succ'=>$query,'statusResult'=>$status));
 
     }
+
+
+
 
 			]]></add>
 
@@ -88,20 +94,7 @@
 
 }
 
- // PHP0
 
-
-    public function statUS($s)
-{
-
-        if($s==1){
-                return 'btn-success';
-                }
-                else{
-                return 'btn-danger';
-        }
-
-}
 
 
 
@@ -153,56 +146,54 @@ $sql = 'SELECT o.currency_code, o.currency_value, ' . $select_sql . " FROM `" . 
 
             $(document).ready(function() {
 
+
+
+
+
+                   $("[name='hideOrderByID-checkbox']").bootstrapSwitch()
+                   $("[name='hideOrder-checkbox']").bootstrapSwitch()
+
+
+
                     if($.cookie("isHide")=='true'){
-                    $('#isHide').toggleClass("btn btn-danger btn btn-success");
-                   $('#isHide').html('ايقاف الفلترة');
+                    $("[name='hideOrder-checkbox']").bootstrapSwitch('state',true);
                     }
                     else{
-                     $('#isHide').toggleClass("btn-success btn btn-danger");
-
-                        $('#isHide').html('تفعيل الفلترة');
+                        $("[name='hideOrder-checkbox']").bootstrapSwitch('state',false);
                      }
                       console.log($.cookie("isHide"));
+
+
+
+
+                      $('input[name="hideOrder-checkbox"]').on('switchChange.bootstrapSwitch', function(event, state) {
+                               $.cookie("isHide",state);
+                               location.reload();
+                      });
+
+
+
+                      $('input[name="hideOrderByID-checkbox"]').on('switchChange.bootstrapSwitch', function(event, state) {
+                          var id=$(this).attr('orderID');
+
+                            $.ajax({
+                                url: '<?php echo $store; ?>admin/index.php?route=sale/order/hideOrder&token=<?php echo $token; ?>&order_id=' + id+'&status='+state,
+                                dataType: 'json',
+                                crossDomain: true,
+                                success: function(json) {
+
+                                }
+                              });
+
+                      });
+
+
+
+
+
              });
 
 
- function hideOrder(id){
-
-
-  $.ajax({
-    url: '<?php echo $store; ?>admin/index.php?route=sale/order/hideOrder&token=<?php echo $token; ?>&order_id=' + id,
-    dataType: 'json',
-    crossDomain: true,
-    success: function(json) {
-
-   $('#ico'+id).toggleClass("fa fa-file-archive-o fa fa-eye-slash");
-   $('#btn'+id).toggleClass("btn btn-success btn btn-danger");
-    }
-  });
-
-
-
-}
-
-
-
-function setStatUsHide() {
-  if($.cookie("isHide")=='true'){
-    $('#isHide').toggleClass("btn btn-success btn btn-danger");
-    $.cookie("isHide",'false');
-    $('#isHide').html('تفعيل الفلترة');
-
-  }
-  else{
-     $('#isHide').toggleClass("btn btn-danger btn btn-success");
-     $.cookie("isHide",'true');
-      $('#isHide').html('ايقاف الفلترة');
-
-  }
-
-   location.reload();
-    console.log($.cookie("isHide"));
-}
 
 
 
@@ -218,8 +209,17 @@ function setStatUsHide() {
             <add><![CDATA[
 
 
-                    <a href="javascript:hideOrder(<?php echo $order['order_id']; ?>);" data-toggle="tooltip" id="btn<?php echo $order['order_id']; ?>"  title="<?php echo $button_view; ?>"
-                    class="btn <?php if($order['hide']==1){echo 'btn-success';}else{echo 'btn-danger';} ?>"><i id="ico<?php echo $order['order_id']; ?>" class="fa fa-file-archive-o"></i></a>
+
+
+  <input type="checkbox" name="hideOrderByID-checkbox" orderID='<?php echo $order['order_id']; ?>'data-on-text="مخفي" data-off-text="معروض" data-on-color="success" data-off-color="danger" data-size="small" <?php  if($order['hide']==1){;?> checked<?php } ?>>
+
+
+
+
+
+
+
+
         ]]></add>
         </operation>
 
@@ -230,7 +230,8 @@ function setStatUsHide() {
 
             <add><![CDATA[
 
-            <button onclick="setStatUsHide();" id="isHide" class="btn btn-primary" type="button">فلترة</button>
+            <input type="checkbox" name="hideOrder-checkbox"   data-handle-width="80"  data-on-text="فلترة مفعلة" data-off-text="فلترة موقوفة"   <?php  if($_COOKIE['isHide']){;?> checked<?php } ?>>
+
 
             ]]></add>
         </operation>
@@ -242,8 +243,10 @@ function setStatUsHide() {
 
 
             <add><![CDATA[
+            <link rel="stylesheet" type="text/css" href="view/javascript/php-order-hide/bootstrap-switch.min.css">
+            <script src="view/javascript/php-order-hide/jquery.cookie.js" type="text/javascript"></script>
+            <script src="view/javascript/php-order-hide/bootstrap-switch.min.js" type="text/javascript"></script>
 
-            <script src="view/javascript/jquery/jquery.cookie.js" type="text/javascript"></script>
 
             ]]></add>
         </operation>
