@@ -1,4 +1,3 @@
 # hideOrder
 
-
-اضافة اوبن كارت لاخفاء الطلبات اللتي انتهت منها
+OpenCart Mod to hide finished orders
